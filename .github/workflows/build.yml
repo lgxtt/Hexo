@@ -1,0 +1,44 @@
+name: Build Hexo and Archive Artifacts
+
+on:
+  push:
+    branches:
+      - main  # 在 main 分支推送时触发（可改为你的分支）
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-and-archive:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 检出代码（含子模块，适用于 Hexo 主题）
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      # 2. 设置 Node.js 环境
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"  # 推荐 LTS 版本
+
+      # 3. 安装 Hexo 和依赖
+      - name: Install Hexo and dependencies
+        run: |
+          npm install -g hexo-cli
+          npm install
+
+      # 4. 构建 Hexo 静态网站
+      - name: Build Hexo
+        run: |
+          hexo clean
+          hexo generate  # 生成的文件默认在 ./public
+
+      # 6. 上传整个 public/ 目录作为 Artifact
+      - name: Upload Artifact (Public Directory)
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: ./public/  # 上传整个 public 目录
+          retention-days: 14  # 保留 7 天（默认 90 天）
